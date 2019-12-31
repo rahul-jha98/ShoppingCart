@@ -3,6 +3,8 @@ const path          = require('path'),
       bodyParser    = require('body-parser'),
       mongoose      = require('mongoose'),
       session       = require('express-session'),
+      csrf          = require('csurf'),
+      flash         = require('connect-flash'),
       MongoDBStore  = require('connect-mongodb-session')(session),
       app           = express();
 
@@ -25,7 +27,8 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     store: store}));
-
+app.use(csrf());
+app.use(flash());
 
 const adminRoutes = require('./routes/admin'),
       shopRoutes  = require('./routes/shop'),
@@ -43,6 +46,12 @@ app.use((req, res, next) => {
         .catch((err) => console.log(err));
 });
 
+app.use((req, res, next) => {
+    res.locals.isAuthenticated = req.session.isLoggedIn;
+    res.locals.csrfToken = req.csrfToken();
+    next();
+});
+
 app.use('/admin', adminRoutes);
 app.use(shopRoutes);
 app.use(authRoutes);
@@ -54,18 +63,6 @@ mongoose
         MONGODB_URI,
     )
     .then((result) => {
-        User.findOne().then((user) => {
-            if (!user) {
-                const user = new User({
-                    name: 'Max',
-                    email: 'max@test.com',
-                    cart: {
-                        items: [],
-                    },
-                });
-                user.save();
-            }
-        });
         app.listen(3000);
     })
     .catch((err) => {

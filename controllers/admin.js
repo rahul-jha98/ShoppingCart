@@ -81,7 +81,6 @@ exports.getProducts = (req, res) => {
     // .select('title price -_id')
     // .populate('userId', 'name')
         .then((products) => {
-            console.log(products);
             res.render('admin/products', {
                 prods: products,
                 pageTitle: 'Admin Products',
